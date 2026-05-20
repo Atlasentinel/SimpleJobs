@@ -1,6 +1,7 @@
 package fr.noe.simpleJobs;
 
 import org.bukkit.Material;
+import org.bukkit.Tag;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -23,7 +24,10 @@ public class JobListener implements Listener {
             //Spider types
             org.bukkit.entity.Spider.class,   new double[]{0.3, 0.8},
             org.bukkit.entity.CaveSpider.class, new double[]{0.35, 0.82},
-            org.bukkit.entity.Enderman.class, new double[]{2.0, 3.0}
+            //Ender types
+            org.bukkit.entity.Enderman.class, new double[]{2.0, 3.0},
+            org.bukkit.entity.Endermite.class, new double[]{1.5, 2.0},
+            org.bukkit.entity.EnderDragon.class, new double[]{4.5,10.5}
     );
 
     public JobListener(JobManager jobManager) {
@@ -53,7 +57,7 @@ public class JobListener implements Listener {
 
         //Métier BUCHERON
         if (profile.getCurrentJob() == JobType.BUCHERON) {
-            if (org.bukkit.Tag.LOGS.isTagged(material)) {
+            if (org.bukkit.Tag.LOGS.isTagged(material) || material == Material.SUGAR_CANE || Tag.FLOWERS.isTagged(material)) {
                 profile.addXp(JobType.BUCHERON, randomBucherXp);
                 if (profile.isShowXpMessage()) {
                     player.sendMessage("§a +" + randomBucherXp + " XP Bûcheron ! (Niveau " + profile.getLevel(JobType.BUCHERON) + ")");

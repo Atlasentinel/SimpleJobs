@@ -18,6 +18,25 @@
             org.bukkit.entity.Player player = (org.bukkit.entity.Player) sender;
             PlayerProfile profile = jobManager.getProfile(player.getUniqueId());
 
+            if(args[0].equalsIgnoreCase("info")){
+                if(args.length == 1){
+                    player.sendMessage("§6=== A propos de vos métiers ===");
+                    for(JobType type : JobType.values())
+                    {
+                        if(type == JobType.JOBLESS) continue;
+
+                        int level = profile.getLevel(type);
+                        double currentXp = profile.getXp(type);
+                        double xpForNextLevel = level * 100;
+                        double xpInCurrentLevel = currentXp % 100;
+
+                        String indicator = (profile.getCurrentJob() == type) ? "§a▶ " : "§7  ";
+                        player.sendMessage(indicator + "§e" + type.name() + " §7: Niveau §f" + level + " §7(§f" + xpInCurrentLevel + "§7/§f" + xpForNextLevel + " §7XP)");
+                    }
+                    return true;
+                }
+            }
+
             if (label.equalsIgnoreCase("job")) {
 
                 if (args.length == 0) {
