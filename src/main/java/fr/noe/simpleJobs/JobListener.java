@@ -15,9 +15,12 @@ public class JobListener implements Listener {
     private final JobManager jobManager;
 
     private static final Map<Class<? extends Entity>, double[]> ENTITY_XP = Map.of(
+            //Zombie types
             org.bukkit.entity.Zombie.class,   new double[]{0.3, 1.0},
+            org.bukkit.entity.Drowned.class, new double[]{0.32, 1.2},
             org.bukkit.entity.Skeleton.class, new double[]{0.5, 1.5},
             org.bukkit.entity.Creeper.class,  new double[]{1.0, 3.0},
+            //Spider types
             org.bukkit.entity.Spider.class,   new double[]{0.3, 0.8},
             org.bukkit.entity.CaveSpider.class, new double[]{0.35, 0.82},
             org.bukkit.entity.Enderman.class, new double[]{2.0, 3.0}
