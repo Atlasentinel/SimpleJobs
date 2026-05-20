@@ -7,76 +7,202 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
+import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
+import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.boss.BarColor;
+import org.bukkit.boss.BarStyle;
+import org.bukkit.boss.BossBar;
 
+import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
+
 
 public class JobListener implements Listener {
     private final JobManager jobManager;
+    private final SimpleJobs plugin;
 
     private static final Map<Class<? extends Entity>, double[]> ENTITY_XP = Map.of(
-            //Zombie types
-            org.bukkit.entity.Zombie.class,   new double[]{0.3, 1.0},
-            org.bukkit.entity.Drowned.class, new double[]{0.32, 1.2},
-            org.bukkit.entity.Skeleton.class, new double[]{0.5, 1.5},
-            org.bukkit.entity.Creeper.class,  new double[]{1.0, 3.0},
-            //Spider types
-            org.bukkit.entity.Spider.class,   new double[]{0.3, 0.8},
-            org.bukkit.entity.CaveSpider.class, new double[]{0.35, 0.82},
-            //Ender types
-            org.bukkit.entity.Enderman.class, new double[]{2.0, 3.0},
-            org.bukkit.entity.Endermite.class, new double[]{1.5, 2.0},
-            org.bukkit.entity.EnderDragon.class, new double[]{4.5,10.5}
+            org.bukkit.entity.Zombie.class,      new double[]{0.3,  1.0},
+            org.bukkit.entity.Drowned.class,     new double[]{0.32, 1.2},
+            org.bukkit.entity.Skeleton.class,    new double[]{0.5,  1.5},
+            org.bukkit.entity.Creeper.class,     new double[]{1.0,  3.0},
+            org.bukkit.entity.Spider.class,      new double[]{0.3,  0.8},
+            org.bukkit.entity.CaveSpider.class,  new double[]{0.35, 0.82},
+            org.bukkit.entity.Enderman.class,    new double[]{2.0,  3.0},
+            org.bukkit.entity.Endermite.class,   new double[]{1.5,  2.0},
+            org.bukkit.entity.EnderDragon.class, new double[]{4.5,  10.5}
     );
 
-    public JobListener(JobManager jobManager) {
+    private final Map<UUID, BossBar> bossBars = new HashMap<>();
+
+    public JobListener(JobManager jobManager, SimpleJobs plugin) {
         this.jobManager = jobManager;
+        this.plugin = plugin;
     }
 
-    //Casser des blocks
+    // ==================== PASSAGE NIVEAU ===============
+
+    private void checkLevelUp(Player player, PlayerProfile profile, JobType job, int levelBefore) {
+        int levelAfter = profile.getLevel(job);
+        if (levelAfter <= levelBefore) return; // pas de level up
+
+        // Récupère la config du métier
+        String basePath = "level-rewards." + job.name();
+        if (!plugin.getConfig().contains(basePath)) return;
+
+        int every = plugin.getConfig().getInt(basePath + ".default-every", 5);
+        String defaultItem = plugin.getConfig().getString(basePath + ".default-item", null);
+
+        for (int lvl = levelBefore + 1; lvl <= levelAfter; lvl++) {
+
+            String overridePath = basePath + ".overrides." + lvl;
+            String itemName = plugin.getConfig().getString(overridePath, null);
+
+            if (itemName == null && lvl % every == 0) {
+                itemName = defaultItem;
+            }
+
+            if (itemName == null) continue;
+
+            try {
+                Material mat = Material.valueOf(itemName.toUpperCase());
+                player.getInventory().addItem(new org.bukkit.inventory.ItemStack(mat));
+                player.sendMessage("§6🎁 Niveau " + lvl + " atteint ! Vous recevez : §e" + mat.name());
+            } catch (IllegalArgumentException e) {
+                plugin.getLogger().warning("Item invalide dans config.yml : " + itemName);
+            }
+        }
+    }
+
+    // ===================== BOSSBAR =====================
+
+    private void updateBossBar(Player player, PlayerProfile profile) {
+        JobType job = profile.getCurrentJob();
+
+        BossBar bar = bossBars.computeIfAbsent(player.getUniqueId(), uuid ->
+                plugin.getServer().createBossBar("", BarColor.GREEN, BarStyle.SOLID)
+        );
+
+        if (job == JobType.CHOMEUR) {
+            bar.setVisible(false);
+            return;
+        }
+
+        bar.setColor(getColorForJob(job));
+        bar.setStyle(BarStyle.SEGMENTED_10);
+        bar.setProgress(profile.getXpProgress(job));
+        bar.setTitle("§6" + job.name() + " §7— Niveau §f" + profile.getLevel(job));
+        bar.setVisible(true);
+
+        if (!bar.getPlayers().contains(player)) {
+            bar.addPlayer(player);
+        }
+    }
+
+    public void setJob(Player player, JobType newJob)
+    {
+        PlayerProfile profile = jobManager.getProfile(player.getUniqueId());
+        profile.setCurrentJob(newJob);
+        updateBossBar(player, profile);
+    }
+
+    private BarColor getColorForJob(JobType job) {
+        return switch (job) {
+            case MINEUR      -> BarColor.PINK;
+            case BUCHERON    -> BarColor.WHITE;
+            case CHASSEUR    -> BarColor.RED;
+            case CULTIVATEUR -> BarColor.YELLOW;
+            case EXPLORATEUR -> BarColor.BLUE;
+            case INGENIEUR   -> BarColor.PURPLE;
+            default          -> BarColor.WHITE;
+        };
+    }
+
+    // ===================== UTILITAIRE =====================
+
+    private double randomXp(double min, double max) {
+        return Math.round(ThreadLocalRandom.current().nextDouble(min, max) * 10.0) / 10.0;
+    }
+
+    // ===================== EVENTS =====================
+
     @EventHandler
-    public void OnBlockBreak(BlockBreakEvent event) {
+    public void onPlayerJoin(PlayerJoinEvent event) {
+        Player player = event.getPlayer();
+        PlayerProfile profile = jobManager.getProfile(player.getUniqueId());
+        updateBossBar(player, profile);
+    }
+
+    @EventHandler
+    public void onPlayerQuit(PlayerQuitEvent event) {
+        BossBar bar = bossBars.remove(event.getPlayer().getUniqueId());
+        if (bar != null) bar.removeAll();
+    }
+
+    @EventHandler
+    public void onBlockPlace(BlockPlaceEvent event) {
         Player player = event.getPlayer();
         PlayerProfile profile = jobManager.getProfile(player.getUniqueId());
         Material material = event.getBlock().getType();
 
-
-        double rawBucherXp = ThreadLocalRandom.current().nextDouble(0.5, 1.3);
-        double randomBucherXp = Math.round(rawBucherXp * 10.0) / 10.0;
-
-        double rawDiggerXp = ThreadLocalRandom.current().nextDouble(0.2, 1.5);
-        double randomDiggerXp = Math.round(rawDiggerXp * 10.0) / 10.0;
-
-        //Métier CHÔMEUR
-        if (profile.getCurrentJob() == JobType.JOBLESS) {
-            if (material == Material.STONE && profile.isShowXpMessage()) {
-                player.sendMessage("§a+0 XP CHÔMEUR ! Trouve toi un travail !");
-            }
-        }
-
-        //Métier BUCHERON
         if (profile.getCurrentJob() == JobType.BUCHERON) {
-            if (org.bukkit.Tag.LOGS.isTagged(material) || material == Material.SUGAR_CANE || Tag.FLOWERS.isTagged(material)) {
-                profile.addXp(JobType.BUCHERON, randomBucherXp);
+            if (Tag.SAPLINGS.isTagged(material)) {
+                double xp = randomXp(0.5, 1.3);
+                int levelBefore = profile.getLevel(JobType.BUCHERON);
+                profile.addXp(JobType.BUCHERON, xp);
+                updateBossBar(player, profile);
+                checkLevelUp(player, profile, JobType.BUCHERON, levelBefore);
                 if (profile.isShowXpMessage()) {
-                    player.sendMessage("§a +" + randomBucherXp + " XP Bûcheron ! (Niveau " + profile.getLevel(JobType.BUCHERON) + ")");
-                }
-            }
-        }
-
-        //Métier MINEUR
-        if (profile.getCurrentJob() == JobType.MINEUR) {
-            if (material == Material.STONE || material == Material.COAL_ORE || material == Material.IRON_ORE || material == Material.DIAMOND_ORE) {
-                profile.addXp(JobType.MINEUR, randomDiggerXp);
-                if (profile.isShowXpMessage()) {
-                    player.sendMessage("§a+" + randomDiggerXp + " XP Mineur ! (Niveau " + profile.getLevel(JobType.MINEUR) + ")");
+                    player.sendMessage("§a+" + xp + " XP Bûcheron ! (Niveau " + profile.getLevel(JobType.BUCHERON) + ")");
                 }
             }
         }
     }
 
-    //Tuer des entités
+    @EventHandler
+    public void onBlockBreak(BlockBreakEvent event) {
+        Player player = event.getPlayer();
+        PlayerProfile profile = jobManager.getProfile(player.getUniqueId());
+        Material material = event.getBlock().getType();
+
+        if (profile.getCurrentJob() == JobType.CHOMEUR) {
+            if (material == Material.STONE && profile.isShowXpMessage()) {
+                player.sendMessage("§a+0 XP CHÔMEUR ! Trouve toi un travail !");
+            }
+            return;
+        }
+
+        if (profile.getCurrentJob() == JobType.BUCHERON) {
+            if (Tag.LOGS.isTagged(material) || material == Material.SUGAR_CANE || Tag.FLOWERS.isTagged(material)) {
+                double xp = randomXp(0.5, 1.3);
+                int levelBefore = profile.getLevel(JobType.BUCHERON);
+                profile.addXp(JobType.BUCHERON, xp);
+                updateBossBar(player, profile);
+                checkLevelUp(player, profile, JobType.BUCHERON, levelBefore);
+                if (profile.isShowXpMessage()) {
+                    player.sendMessage("§a+" + xp + " XP Bûcheron ! (Niveau " + profile.getLevel(JobType.BUCHERON) + ")");
+                }
+            }
+        }
+
+        if (profile.getCurrentJob() == JobType.MINEUR) {
+            if (material == Material.STONE || material == Material.COAL_ORE || material == Material.IRON_ORE || material == Material.DIAMOND_ORE) {
+                double xp = randomXp(0.2, 1.5);
+                int levelBefore = profile.getLevel(JobType.MINEUR);
+                profile.addXp(JobType.MINEUR, xp);
+                updateBossBar(player, profile);
+                checkLevelUp(player, profile, JobType.MINEUR, levelBefore);
+                if (profile.isShowXpMessage()) {
+                    player.sendMessage("§a+" + xp + " XP Mineur ! (Niveau " + profile.getLevel(JobType.MINEUR) + ")");
+                }
+            }
+        }
+    }
+
     @EventHandler
     public void onEntityDamage(EntityDamageByEntityEvent event) {
         if (!(event.getDamager() instanceof Player)) return;
@@ -85,7 +211,7 @@ public class JobListener implements Listener {
         if (profile.getCurrentJob() != JobType.CHASSEUR) return;
 
         double[] range = null;
-        for (Map.Entry<Class<? extends org.bukkit.entity.Entity>, double[]> entry : ENTITY_XP.entrySet()) {
+        for (Map.Entry<Class<? extends Entity>, double[]> entry : ENTITY_XP.entrySet()) {
             if (entry.getKey().isInstance(event.getEntity())) {
                 range = entry.getValue();
                 break;
@@ -93,9 +219,11 @@ public class JobListener implements Listener {
         }
         if (range == null) return;
 
-        double xp = Math.round(ThreadLocalRandom.current().nextDouble(range[0], range[1]) * 10.0) / 10.0;
+        double xp = randomXp(range[0], range[1]);
+        int levelBefore = profile.getLevel(JobType.CHASSEUR);
         profile.addXp(JobType.CHASSEUR, xp);
-
+        updateBossBar(player, profile);
+        checkLevelUp(player, profile, JobType.CHASSEUR, levelBefore);
         if (profile.isShowXpMessage()) {
             player.sendMessage("§a+" + xp + " XP Chasseur ! (Niveau " + profile.getLevel(JobType.CHASSEUR) + ")");
         }

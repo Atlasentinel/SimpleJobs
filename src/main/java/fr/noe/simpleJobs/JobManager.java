@@ -40,7 +40,7 @@ public class JobManager {
                 UUID uuid = UUID.fromString(uuidStr);
                 PlayerProfile profile = new PlayerProfile(uuid);
 
-                String jobStr = dataConfig.getString("players." + uuidStr + ".job", "JOBLESS");
+                String jobStr = dataConfig.getString("players." + uuidStr + ".job", "CHOMEUR");
                 profile.setCurrentJob(JobType.valueOf(jobStr));
 
                 boolean showMsg = dataConfig.getBoolean("players." + uuidStr + ".show-messages", true);
@@ -74,6 +74,26 @@ public class JobManager {
             dataConfig.save(configFile);
         } catch (IOException e) {
             plugin.getLogger().severe("Impossible de sauvegarder les donnees dans data.yml !");
+        }
+    }
+
+    public void resetPlayerJob(UUID uuid, JobType job) {
+        getProfile(uuid).resetXp(job);
+    }
+
+    public void resetPlayerAll(UUID uuid) {
+        getProfile(uuid).resetAllXp();
+    }
+
+    public void resetAllPlayers(JobType job) {
+        for (PlayerProfile profile : profiles.values()) {
+            profile.resetXp(job);
+        }
+    }
+
+    public void resetAllPlayersAll() {
+        for (PlayerProfile profile : profiles.values()) {
+            profile.resetAllXp();
         }
     }
 }

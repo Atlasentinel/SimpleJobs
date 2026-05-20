@@ -1,7 +1,7 @@
 package fr.noe.simpleJobs;
 
 public enum JobType {
-    JOBLESS,
+    CHOMEUR,
     MINEUR,
     BUCHERON,
     CULTIVATEUR,

@@ -1,0 +1,20 @@
+level-rewards:
+  MINEUR:
+    default-every: 5
+    default-item: STONE_PICKAXE
+    overrides:
+      15: IRON_PICKAXE
+      30: GOLD_PICKAXE
+      50: DIAMOND_PICKAXE
+  BUCHERON:
+    default-every: 5
+    default-item: STONE_AXE
+    overrides:
+      15: IRON_AXE
+      30: DIAMOND_AXE
+  CHASSEUR:
+    default-every: 5
+    default-item: STONE_SWORD
+    overrides:
+      15: IRON_SWORD
+      30: DIAMOND_SWORD

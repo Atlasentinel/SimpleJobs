@@ -6,7 +6,17 @@ api-version: '1.21.5'
 load: POSTWORLD
 commands:
   job:
-    description: Commande principale pour choisir les metiers.
-    usage: /job set <metier>
+    description: Commande principale pour les métiers.
+    usage: /job <set|info|show>
+permissions:
+  simplejobs.givexp:
+    description: Permet de donner de l'XP à un joueur
+    default: op
+  simplejobs.reset.all:
+    description: Permet de reset l'XP de tous les joueurs
+    default: op
+  simplejobs.reset.other:
+    description: Permet de reset l'XP d'un autre joueur
+    default: op
 
 authors: [ Atlasentinel ]
