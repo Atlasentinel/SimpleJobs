@@ -1,0 +1,12 @@
+name: SimpleJobs
+version: '${version}'
+
+main: fr.noe.simpleJobs.SimpleJobs
+api-version: '1.21.5'
+load: POSTWORLD
+commands:
+  job:
+    description: Commande principale pour choisir les metiers.
+    usage: /job set <metier>
+
+authors: [ Atlasentinel ]
