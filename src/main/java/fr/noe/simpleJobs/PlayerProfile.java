@@ -8,12 +8,14 @@ public class PlayerProfile {
     private final UUID playerUUID;
     private JobType currentJob;
     private final HashMap<JobType, Double> jobXpMap;
+    private Boolean showXpMessage;
 
     public PlayerProfile(UUID playerUUID)
     {
         this.playerUUID = playerUUID;
         this.currentJob = JobType.JOBLESS;
         this.jobXpMap = new HashMap<>();
+        this.showXpMessage = true;
         for(JobType type: JobType.values())
         {
             jobXpMap.put(type,0.0);
@@ -28,6 +30,16 @@ public class PlayerProfile {
     public JobType getCurrentJob()
     {
         return currentJob;
+    }
+
+    public Boolean isShowXpMessage()
+    {
+        return showXpMessage;
+    }
+
+    public void setShowXpMessage(Boolean _showXpMessage)
+    {
+        this.showXpMessage = _showXpMessage;
     }
 
     public void setCurrentJob(JobType currentJob) {
