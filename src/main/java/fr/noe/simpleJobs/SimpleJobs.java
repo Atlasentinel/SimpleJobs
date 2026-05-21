@@ -5,14 +5,19 @@ import org.bukkit.plugin.java.JavaPlugin;
 public final class SimpleJobs extends JavaPlugin {
     private JobManager jobManager;
     private JobListener jobListener;
+    private LarbinManager larbinManager;
+    private LarbinListener larbinListener;
 
 
     @Override
     public void onEnable() {
         saveDefaultConfig();
         this.jobManager = new JobManager(this);
+        this.larbinManager = new LarbinManager(this);
         this.jobListener = new JobListener(jobManager, this);
+        this.larbinListener = new LarbinListener(jobManager, larbinManager, this);
         getServer().getPluginManager().registerEvents(jobListener, this);
+        getServer().getPluginManager().registerEvents(larbinListener, this);
         getLogger().info("Le plugin de metiers SimpleJobs vient de s'activer !");
     }
 
