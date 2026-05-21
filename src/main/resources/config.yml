@@ -1,20 +1,72 @@
 level-rewards:
   MINEUR:
     default-every: 5
-    default-item: STONE_PICKAXE
+    default-item:
+      material: STONE_PICKAXE
+      name: "§7Pioche du Mineur"
+      enchantments:
+        EFFICIENCY: 1
     overrides:
-      15: IRON_PICKAXE
-      30: GOLD_PICKAXE
-      50: DIAMOND_PICKAXE
+      15:
+        material: IRON_PICKAXE
+        name: "§aOutil Robuste"
+        enchantments:
+          EFFICIENCY: 2
+          UNBREAKING: 1
+      30:
+        material: GOLD_PICKAXE
+        name: "§6Pioche Dorée"
+        enchantments:
+          EFFICIENCY: 3
+          FORTUNE: 1
+      50:
+        material: DIAMOND_PICKAXE
+        name: "§bPioche du Vétéran"
+        enchantments:
+          EFFICIENCY: 4
+          UNBREAKING: 2
+          FORTUNE: 2
+
   BUCHERON:
     default-every: 5
-    default-item: STONE_AXE
+    default-item:
+      material: STONE_AXE
+      name: "§7Hache du Bûcheron"
+      enchantments:
+        EFFICIENCY: 1
     overrides:
-      15: IRON_AXE
-      30: DIAMOND_AXE
+      15:
+        material: IRON_AXE
+        name: "§aTranchante Fidèle"
+        enchantments:
+          EFFICIENCY: 2
+          UNBREAKING: 1
+      30:
+        material: DIAMOND_AXE
+        name: "§bAmi de la Forêt"
+        enchantments:
+          EFFICIENCY: 3
+          UNBREAKING: 2
+          SHARPNESS: 1
+
   CHASSEUR:
     default-every: 5
-    default-item: STONE_SWORD
+    default-item:
+      material: STONE_SWORD
+      name: "§7Dague du Survivant"
+      enchantments:
+        SHARPNESS: 1
     overrides:
-      15: IRON_SWORD
-      30: DIAMOND_SWORD
+      15:
+        material: IRON_SWORD
+        name: "§aGOLDEN WIND"
+        enchantments:
+          SHARPNESS: 2
+          UNBREAKING: 1
+      30:
+        material: DIAMOND_SWORD
+        name: "§bTrancheuse de Gobelin"
+        enchantments:
+          SHARPNESS: 3
+          UNBREAKING: 2
+          LOOTING: 1

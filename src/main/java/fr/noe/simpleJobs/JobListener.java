@@ -48,36 +48,73 @@ public class JobListener implements Listener {
 
     private void checkLevelUp(Player player, PlayerProfile profile, JobType job, int levelBefore) {
         int levelAfter = profile.getLevel(job);
-        if (levelAfter <= levelBefore) return; // pas de level up
+        if (levelAfter <= levelBefore) return;
 
-        // Récupère la config du métier
         String basePath = "level-rewards." + job.name();
         if (!plugin.getConfig().contains(basePath)) return;
 
         int every = plugin.getConfig().getInt(basePath + ".default-every", 5);
-        String defaultItem = plugin.getConfig().getString(basePath + ".default-item", null);
 
         for (int lvl = levelBefore + 1; lvl <= levelAfter; lvl++) {
+            String itemPath;
 
-            String overridePath = basePath + ".overrides." + lvl;
-            String itemName = plugin.getConfig().getString(overridePath, null);
-
-            if (itemName == null && lvl % every == 0) {
-                itemName = defaultItem;
+            if (plugin.getConfig().contains(basePath + ".overrides." + lvl)) {
+                itemPath = basePath + ".overrides." + lvl;
+            } else if (lvl % every == 0) {
+                itemPath = basePath + ".default-item";
+            } else {
+                continue;
             }
 
-            if (itemName == null) continue;
+            org.bukkit.inventory.ItemStack item = buildItem(itemPath);
+            if (item == null) continue;
 
-            try {
-                Material mat = Material.valueOf(itemName.toUpperCase());
-                player.getInventory().addItem(new org.bukkit.inventory.ItemStack(mat));
-                player.sendMessage("§6🎁 Niveau " + lvl + " atteint ! Vous recevez : §e" + mat.name());
-            } catch (IllegalArgumentException e) {
-                plugin.getLogger().warning("Item invalide dans config.yml : " + itemName);
-            }
+            player.getInventory().addItem(item);
+            String displayName = plugin.getConfig().getString(itemPath + ".name", item.getType().name());
+            player.sendMessage("§6🎁 Niveau " + lvl + " atteint ! Vous recevez : §e" + displayName);
         }
     }
 
+    private org.bukkit.inventory.ItemStack buildItem(String path) {
+        String materialName = plugin.getConfig().getString(path + ".material");
+        if (materialName == null) return null;
+
+        Material mat;
+        try {
+            mat = Material.valueOf(materialName.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            plugin.getLogger().warning("Material invalide dans config.yml : " + materialName);
+            return null;
+        }
+
+        org.bukkit.inventory.ItemStack item = new org.bukkit.inventory.ItemStack(mat);
+        org.bukkit.inventory.meta.ItemMeta meta = item.getItemMeta();
+        if (meta == null) return item;
+
+        // Nom custom
+        String name = plugin.getConfig().getString(path + ".name");
+        if (name != null) {
+            meta.setDisplayName(name);
+        }
+
+        // Enchantements
+        if (plugin.getConfig().getConfigurationSection(path + ".enchantments") != null) {
+            for (String enchName : plugin.getConfig().getConfigurationSection(path + ".enchantments").getKeys(false)) {
+                try {
+                    org.bukkit.enchantments.Enchantment ench = org.bukkit.enchantments.Enchantment.getByName(enchName);
+                    if (ench != null) {
+                        int level = plugin.getConfig().getInt(path + ".enchantments." + enchName, 1);
+                        meta.addEnchant(ench, level, true); // true = ignore les restrictions
+                    }
+                } catch (Exception e) {
+                    plugin.getLogger().warning("Enchantement invalide dans config.yml : " + enchName);
+                }
+            }
+        }
+
+        item.setItemMeta(meta);
+        return item;
+    }
     // ===================== BOSSBAR =====================
 
     private void updateBossBar(Player player, PlayerProfile profile) {
