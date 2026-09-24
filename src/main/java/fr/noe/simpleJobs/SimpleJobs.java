@@ -173,6 +173,24 @@ public final class SimpleJobs extends JavaPlugin {
             return true;
         }
 
+        // /job larbinfo
+        if (args[0].equalsIgnoreCase("larbinfo")) {
+            player.sendMessage("§6=== Guide du Larbin ===");
+            player.sendMessage("§e▶ Tamer §7: Tiens une §dTulipe Rose §7et clique droit sur un villageois");
+            player.sendMessage("§e▶ Monter de niveau §7: Tiens une §5Ender Perle §7et clique droit sur ton larbin");
+            player.sendMessage("§e▶ Ouvrir l'inventaire §7: Clique droit sur ton larbin");
+            player.sendMessage("§e▶ Stay/Follow §7: Shift + Clique droit sur ton larbin");
+            player.sendMessage("§e▶ Niveaux d'inventaire §7:");
+            player.sendMessage("§7  Niveau §f1 §7→ §f9 §7cases");
+            player.sendMessage("§7  Niveau §f2 §7→ §f18 §7cases");
+            player.sendMessage("§7  Niveau §f3 §7→ §f27 §7cases");
+            player.sendMessage("§7  Niveau §f4 §7→ §f36 §7cases");
+            player.sendMessage("§7  Niveau §f5 §7→ §f45 §7cases");
+            player.sendMessage("§7  Niveau §f6 §7→ §f54 §7cases §a(MAX)");
+            player.sendMessage("§e▶ Mort du larbin §7: Les items de son inventaire sont droppés au sol");
+            return true;
+        }
+
 
         // Commande inconnue
         player.sendMessage("§eTon métier actuel : §6" + profile.getCurrentJob().name());

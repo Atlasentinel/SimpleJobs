@@ -7,7 +7,7 @@ load: POSTWORLD
 commands:
   job:
     description: Commande principale pour les métiers.
-    usage: /job <set|info|show>
+    usage: /job <set|info|show|reset|givexp|larbinfo>
 permissions:
   simplejobs.givexp:
     description: Permet de donner de l'XP à un joueur
@@ -20,3 +20,4 @@ permissions:
     default: op
 
 authors: [ Atlasentinel ]
+paperweight-mappings-namespace: mojang

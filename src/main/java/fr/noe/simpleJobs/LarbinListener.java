@@ -1,5 +1,6 @@
 package fr.noe.simpleJobs;
 
+import net.kyori.adventure.text.Component;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Player;
@@ -16,6 +17,7 @@ public class LarbinListener implements Listener {
     private final LarbinManager larbinManager;
     private final JobManager jobManager;
     private final SimpleJobs plugin;
+    private final Material CHOOSEN_ITEM = Material.PINK_TULIP;
 
     public LarbinListener(JobManager jobManager, LarbinManager larbinManager, SimpleJobs plugin)
     {
@@ -43,12 +45,35 @@ public class LarbinListener implements Listener {
             return;
         }
 
+        if (itemInHand.getType() == Material.ENDER_PEARL) {
+            if (!larbinManager.isOwner(player, villager)) {
+                player.sendMessage("§cCe larbin ne vous appartient pas !");
+                return;
+            }
+            larbinManager.levelUpLarbin(player, villager);
+            itemInHand.setAmount(itemInHand.getAmount() - 1);
+            event.setCancelled(true);
+            return;
+        }
+
         if(!larbinManager.isOwner(player, villager)) {
+            larbinManager.larbinSpeak(player, villager, "Je n'ai pas d'ordre à recevoir de vous !");
             player.sendMessage("§cCe larbin ne vous appartient pas !");
             return;
         }
 
-        larbinManager.openInventory(player, villager);
+        if(player.isSneaking()){
+            if (larbinManager.isStay(villager)) {
+                larbinManager.setFollow(villager);
+                larbinManager.larbinSpeak(player, villager, "Je vous suis maître !");
+            } else {
+                larbinManager.setStay(villager);
+                larbinManager.larbinSpeak(player, villager, "Je vous attend ici maître !");
+            }
+        } else {
+            larbinManager.openInventory(player, villager);
+            event.setCancelled(true);
+        }
         event.setCancelled(true);
     }
 
@@ -74,7 +99,7 @@ public class LarbinListener implements Listener {
 
     public Boolean isTameItem(ItemStack itemStack)
     {
-        return itemStack.getType() == Material.PINK_TULIP;
+        return itemStack.getType() == CHOOSEN_ITEM;
     }
 
 }
