@@ -73,7 +73,7 @@ public class JobManager {
         try {
             dataConfig.save(configFile);
         } catch (IOException e) {
-            plugin.getLogger().severe("Impossible de sauvegarder les donnees dans data.yml !");
+            plugin.getLogger().severe("Impossible de sauvegarder les données dans data.yml !");
         }
     }
 
